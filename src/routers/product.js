@@ -66,8 +66,8 @@ router.get("/", (req, res) => {
     })
     .catch(error => {
       // res.send(error);
-      // console.log(error);
-      res.json(output);
+      console.log(error);
+      // res.json(output);
     });
 });
 //Read
@@ -198,6 +198,26 @@ router.post("/comment/:productId", (req, res) => {
     });
   });
 });
+// 刪除留言
+router.post("/delcomment/:msgId",(req,res)=>{
+  let msgId = req.params.msgId;
+  const sql = `DELETE FROM shop_comments WHERE id = ${msgId}`;
+  db.queryAsync(sql)
+  .then(result=>
+    {res.json({
+      result
+    })}
+  )
+})
+//更新留言
+router.post("/editcomment/:msgId",(req,res)=>{
+  let msgId = req.params.msgId;
+  const sql = `UPDATE shop_comments SET content = ? WHERE id=${msgId}`
+  db.queryAsync(sql,[req.body.content])
+  .then(result=>{
+    res.json({result})
+  })
+})
 //抓cart中商品的資訊
 router.post("/getCartImg", (req, res) => {
   //如果購物車是空的，回傳一個空sql查詢結果，然後跳出
