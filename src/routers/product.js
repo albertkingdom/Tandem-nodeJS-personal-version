@@ -8,21 +8,24 @@ const dateFormat = "YYYY-MM-DD";
 const url = require("url");
 const nodemailer = require("nodemailer"); //寄email
 const credentials = require("./credentials");
+const axios = require("axios");
+require("dotenv").config();
 // router.get('/',(req,res)=>{
 //     res.send('hello');
 // })
+//取得商品詳細資訊for product
 router.get("/:id", (req, res) => {
   let totalRows;
   const id = req.params.id;
   // const sql = `SELECT * FROM items WHERE itemId=?`;
   const sql = `SELECT * FROM \`items\` INNER JOIN \`vendors\` ON vendors.vId = items.itemDeveloperId INNER JOIN \`categories\` ON \`categories\`.\`categoryId\` = \`items\`.\`itemCategoryId\` WHERE itemId=?`;
-  db.queryAsync(sql, id).then(result => {
+  db.queryAsync(sql, id).then((result) => {
     result.forEach((row, idx) => {
       row.itemDate = moment(row.itemDate).format(dateFormat);
     });
     res.json({
       totalRows,
-      rows: result
+      rows: result,
     });
   });
 });
@@ -38,7 +41,7 @@ router.get("/", (req, res) => {
   const t_sql = `SELECT COUNT(1) AS num FROM items WHERE itemName LIKE ?`;
 
   db.queryAsync(t_sql, ["%" + search_query + "%"])
-    .then(result => {
+    .then((result) => {
       totalRows = result[0].num; //總筆數
       totalPages = Math.ceil(totalRows / perPage);
 
@@ -46,12 +49,12 @@ router.get("/", (req, res) => {
       if (page < 1) page = 1;
       if (page > totalPages) page = totalPages;
 
-      const sql = `SELECT * FROM items WHERE itemName LIKE ? LIMIT ${(page -
-        1) *
-        perPage},${perPage}`;
+      const sql = `SELECT * FROM items WHERE itemName LIKE ? LIMIT ${
+        (page - 1) * perPage
+      },${perPage}`;
       return db.queryAsync(sql, ["%" + search_query + "%"]);
     })
-    .then(result => {
+    .then((result) => {
       result.forEach((row, idx) => {
         row.itemDate = moment(row.itemDate).format(dateFormat);
       });
@@ -61,10 +64,10 @@ router.get("/", (req, res) => {
         totalPages,
         search_query,
         page,
-        rows: result
+        rows: result,
       });
     })
-    .catch(error => {
+    .catch((error) => {
       // res.send(error);
       console.log(error);
       // res.json(output);
@@ -78,7 +81,7 @@ router.get("/list/:page?", (req, res) => {
   const t_sql = "SELECT COUNT(1) AS num FROM `items`";
 
   db.queryAsync(t_sql)
-    .then(result => {
+    .then((result) => {
       totalRows = result[0].num; //總筆數
       totalPages = Math.ceil(totalRows / perPage);
 
@@ -86,11 +89,12 @@ router.get("/list/:page?", (req, res) => {
       if (page < 1) page = 1;
       if (page > totalPages) page = totalPages;
 
-      const sql = `SELECT * FROM items LIMIT ${(page - 1) *
-        perPage},${perPage}`;
+      const sql = `SELECT * FROM items LIMIT ${
+        (page - 1) * perPage
+      },${perPage}`;
       return db.queryAsync(sql);
     })
-    .then(result => {
+    .then((result) => {
       result.forEach((row, idx) => {
         row.itemDate = moment(row.itemDate).format(dateFormat);
       });
@@ -106,11 +110,11 @@ router.get("/list/:page?", (req, res) => {
         totalRows,
         totalPages,
         page,
-        rows: result
+        rows: result,
       });
     });
 });
-//篩選查詢
+//篩選查詢商品資料for productlist
 router.get("/search/:type/:vendorId/:price/:orderBy/:page?", (req, res) => {
   const perPage = 18; //每頁幾筆
   let totalRows, totalPages;
@@ -131,7 +135,7 @@ router.get("/search/:type/:vendorId/:price/:orderBy/:page?", (req, res) => {
   const t_sql = `SELECT COUNT(1) AS num FROM items WHERE itemCategoryId LIKE '${type}' AND itemDeveloperId LIKE '${vendor}' AND itemPrice ${price} ORDER BY ${orderBy}`;
   // console.log("t_sql", t_sql);
   db.queryAsync(t_sql)
-    .then(result => {
+    .then((result) => {
       totalRows = result[0].num; //總筆數
       totalPages = Math.ceil(totalRows / perPage);
 
@@ -139,12 +143,12 @@ router.get("/search/:type/:vendorId/:price/:orderBy/:page?", (req, res) => {
       if (page < 1) page = 1;
       if (page > totalPages) page = totalPages;
 
-      const sql = `SELECT * FROM items WHERE itemCategoryId LIKE '${type}' AND itemDeveloperId LIKE'${vendor}' AND itemPrice ${price} ORDER BY ${orderBy} LIMIT ${(page -
-        1) *
-        perPage},${perPage} `;
+      const sql = `SELECT * FROM items WHERE itemCategoryId LIKE '${type}' AND itemDeveloperId LIKE'${vendor}' AND itemPrice ${price} ORDER BY ${orderBy} LIMIT ${
+        (page - 1) * perPage
+      },${perPage} `;
       return db.queryAsync(sql);
     })
-    .then(result => {
+    .then((result) => {
       result.forEach((row, idx) => {
         row.itemDate = moment(row.itemDate).format(dateFormat);
       });
@@ -161,26 +165,26 @@ router.get("/search/:type/:vendorId/:price/:orderBy/:page?", (req, res) => {
         totalPages,
         type,
         page,
-        rows: result
+        rows: result,
       });
     });
 });
 
-//取得商品下面的留言
+//取得商品下面的留言for commentlist
 router.get("/comment/:productId", (req, res) => {
   let productId = req.params.productId;
   // const sql = `SELECT * FROM shop_comments WHERE itemId =${productId}`;
   const sql = `SELECT * FROM shop_comments INNER JOIN mb_info ON shop_comments.mbId = mb_info.mbId WHERE itemId =${productId}`;
-  db.queryAsync(sql).then(result => {
+  db.queryAsync(sql).then((result) => {
     result.forEach((row, idx) => {
       row.created_at = moment(row.created_at).format(dateFormat);
     });
     res.json({
-      result
+      result,
     });
   });
 });
-//發表對商品的留言
+//發表對商品的留言for commentlist
 router.post("/comment/:productId", (req, res) => {
   let productId = req.params.productId;
   const sql = `INSERT INTO shop_comments (\`name\`,\`content\`,\`rating\`,\`itemId\`,\`parentId\`,\`mbId\`) 
@@ -191,33 +195,31 @@ router.post("/comment/:productId", (req, res) => {
     req.body.rating,
     req.body.itemId,
     req.body.parentId,
-    req.body.memberId
-  ]).then(result => {
+    req.body.memberId,
+  ]).then((result) => {
     res.json({
-      result
+      result,
     });
   });
 });
-// 刪除留言
-router.post("/delcomment/:msgId",(req,res)=>{
+// 刪除留言for commentlist
+router.post("/delcomment/:msgId", (req, res) => {
   let msgId = req.params.msgId;
   const sql = `DELETE FROM shop_comments WHERE id = ${msgId}`;
-  db.queryAsync(sql)
-  .then(result=>
-    {res.json({
-      result
-    })}
-  )
-})
-//更新留言
-router.post("/editcomment/:msgId",(req,res)=>{
+  db.queryAsync(sql).then((result) => {
+    res.json({
+      result,
+    });
+  });
+});
+//更新留言for commentlist
+router.post("/editcomment/:msgId", (req, res) => {
   let msgId = req.params.msgId;
-  const sql = `UPDATE shop_comments SET content = ? WHERE id=${msgId}`
-  db.queryAsync(sql,[req.body.content])
-  .then(result=>{
-    res.json({result})
-  })
-})
+  const sql = `UPDATE shop_comments SET content = ? WHERE id=${msgId}`;
+  db.queryAsync(sql, [req.body.content]).then((result) => {
+    res.json({ result });
+  });
+});
 //抓cart中商品的資訊
 router.post("/getCartImg", (req, res) => {
   //如果購物車是空的，回傳一個空sql查詢結果，然後跳出
@@ -228,29 +230,39 @@ router.post("/getCartImg", (req, res) => {
   const sql = `SELECT * FROM items WHERE itemId IN (?)`;
   // console.log("sql=", sql);
   // console.log(req.body);
-  db.queryAsync(sql, [req.body.id]).then(result => {
+  db.queryAsync(sql, [req.body.id]).then((result) => {
     res.json({
-      result
+      result,
     });
   });
 });
-//抓訂單資訊
+//訂單成立後抓訂單資訊傳給前端
 router.post("/orderInfo/", (req, res) => {
-  let sql = "SELECT MAX(`orderId`) FROM `item_lists`";
+  const getLatestOrderSql = "SELECT MAX(`orderId`) FROM `item_lists`";
+  const orderInfoSql = `SELECT * FROM item_lists WHERE orderId = ?`;
+  const getItemInfo = "SELECT `items`.itemName FROM items WHERE itemId IN (?)";
   // console.log(sql);
-  db.queryAsync(sql, [])
-    .then(result => {
+  db.queryAsync(getLatestOrderSql, [])
+    .then((result) => {
       const latestId = result[0]["MAX(`orderId`)"];
       // console.log(latestId);
-      const orderInfoSql = `SELECT * FROM item_lists WHERE orderId = '${latestId}'`;
-      return db.queryAsync(orderInfoSql);
+
+      return db.queryAsync(orderInfoSql, [`${latestId}`]);
     })
-    .then(r => {
-      r.forEach((row, idx) => {
+    .then(async (result) => {
+      // console.log(result);
+      const itemIds = JSON.parse(result[0].itemId);
+      // const itemIds = [1,2];
+
+      // console.log("itemIds", itemIds, typeof itemIds);
+      result.forEach((row, idx) => {
         row.created_at = moment(row.created_at).format(dateFormat);
       });
-
-      res.json(r);
+      //查商品名稱
+      const response = await db.queryAsync(getItemInfo, [itemIds]);
+      const itemNameResult = await response;
+      // console.log("item Names", itemNameResult);
+      res.json({ result, itemNames: itemNameResult });
     });
 });
 //一次找訂單中商品id的名稱
@@ -261,39 +273,83 @@ router.post("/multipleId", (req, res) => {
   let sql = `SELECT itemName FROM items WHERE itemId in (${ids})`;
 
   // console.log(sql);
-  db.queryAsync(sql).then(result => {
+  db.queryAsync(sql).then((result) => {
     res.json(result);
   });
 });
 //成立訂單payment,寫進`item_lists`
 router.post("/payment/", (req, res) => {
-  const sqlGetOrderId = "INSERT INTO `orders` (`username`) VALUES (?)";
-  // db.queryAsync(sqlGetOrderId,[req.body.username])
-  // .then(result=>{
-  //     res.json({
-  //         result,
-  //         })
-  //     console.log(result.insertId)//最新一筆orderId
-  // })
+  console.log(req.body);
   const sqlOrder =
     "INSERT INTO `item_lists` (`itemId`,`orderId`,`checkSubtotal`,`userId`) VALUES (?,?,?,?)";
+
+  const sqlPrice = "SELECT `itemPrice` FROM `items` WHERE `itemId` IN (?)";
+
   let orderId = "order_" + new Date().getTime(); //產生orderId
-  // console.log(req.body);
-  // console.log(orderId);
-  // console.log(req.body.itemIds);
-  db.queryAsync(sqlOrder, [
-    req.body.itemIds,
-    orderId,
-    req.body.totalPrice,
-    req.body.mbId
-  ]).then(result => {
-    res.json({
-      result
+  let totalPrice;
+  const itemIds = JSON.parse(req.body.itemIds);
+  db.queryAsync(sqlPrice, [itemIds])
+    .then((result) => {
+      // console.log("查詢商品價格", result);
+      totalPrice = result.reduce((total, item) => (total += item.itemPrice), 0);
+      console.log("total price", totalPrice);
+
+      return db.queryAsync(sqlOrder, [
+        req.body.itemIds,
+        orderId,
+        totalPrice,
+        req.body.mbId,
+      ]);
+    })
+    .then((result) => {
+      console.log(result);
+
+      // res.json({ result });
+      let writeToDatabase = result;
+      return writeToDatabase;
+    })
+    .then(async (writeToDatabaseResult) => {
+      console.log("result2", writeToDatabaseResult);
+      //送資料到tappay server
+      const post_data = {
+        prime: req.body.prime,
+        partner_key: process.env.TAPPAY_PARTNER_KEY,
+        merchant_id: "albertkingdom_CTBC",
+        amount: totalPrice,
+        currency: "TWD",
+        details: "An apple and a pen.",
+        order_number: orderId,
+        cardholder: {
+          phone_number: "+886923456789",
+          name: "jack",
+          email: "example@gmail.com",
+        },
+        remember: false,
+      };
+      try {
+        const response = await axios.post(
+          "https://sandbox.tappaysdk.com/tpc/payment/pay-by-prime",
+          post_data,
+          {
+            headers: {
+              "x-api-key": process.env.TAPPAY_PARTNER_KEY,
+            },
+          }
+        );
+
+        console.log("tappay response", response.data);
+        if (response.data.status === 0) {
+          res.json({ result: writeToDatabaseResult, tapPay: "success" });
+        } else {
+          console.log("error in tapPay");
+        }
+      } catch (error) {
+        console.log(error);
+      }
     });
-  });
 });
 
-//對商品按讚，寫入mb_info
+//對商品按讚，寫入mb_info(會員)、items(商品)
 // 抓收藏商品的人數
 router.post("/addtolike/", (req, res) => {
   let azenId;
@@ -306,7 +362,7 @@ router.post("/addtolike/", (req, res) => {
   // const addcount = "UPDATE `items` SET `` "
   // console.log(req.body.userId);
   db.queryAsync(getlikeId, [req.body.userId])
-    .then(result => {
+    .then((result) => {
       // res.json({
       //     result
 
@@ -327,13 +383,13 @@ router.post("/addtolike/", (req, res) => {
 
       return db.queryAsync(addtolike, [azenId_string, req.body.userId]);
     })
-    .then(r => {
+    .then((r) => {
       //回傳給前端結果
       res.json({ r });
 
       return db.queryAsync(getmbidfromitem, [req.body.likeproductId]);
     })
-    .then(r1 => {
+    .then((r1) => {
       // console.log(r1);
 
       let arr = JSON.parse(r1[0].memberFavoriteId);
@@ -345,52 +401,55 @@ router.post("/addtolike/", (req, res) => {
       arr_string = JSON.stringify(arr);
       return db.queryAsync(addmbidtoitem, [arr_string, req.body.likeproductId]);
     })
-    .then(r2 => {
+    .then((r2) => {
       // console.log("最後memberFavorId結果", r2);
     });
 });
 
-router.post("/unAzen",(req,res)=>{
-  let unazenId,newazenId,newarr;
+router.post("/unAzen", (req, res) => {
+  let unazenId, newazenId, newarr;
   const getlikeId = "SELECT `mbAzen` FROM `mb_info` WHERE `mbId`=?";
   const addtolike = "UPDATE `mb_info` SET `mbAzen` =? WHERE `mbId` = ?";
   const getmbidfromitem =
     "SELECT `memberFavoriteId` FROM `items` WHERE `itemId` =?";
   const addmbidtoitem =
     "UPDATE `items` SET `memberFavoriteId`=? WHERE `itemId`=?";
-  db.queryAsync(getlikeId,[req.body.userId])
-    .then(result=>{
+  db.queryAsync(getlikeId, [req.body.userId])
+    .then((result) => {
       unazenId = result[0].mbAzen;
       unazenId = JSON.parse(unazenId);
-      if(unazenId.indexOf(req.body.unlikeproductId) !== -1){
-        newazenId = unazenId.filter(id=>id!==req.body.unlikeproductId)
+      if (unazenId.indexOf(req.body.unlikeproductId) !== -1) {
+        newazenId = unazenId.filter((id) => id !== req.body.unlikeproductId);
       }
 
       azenId_string = JSON.stringify(newazenId);
       return db.queryAsync(addtolike, [azenId_string, req.body.userId]);
     })
-    .then(r=>{
+    .then((r) => {
       res.json({ r });
       return db.queryAsync(getmbidfromitem, [req.body.unlikeproductId]);
     })
-    .then(r1 => {
+    .then((r1) => {
       // console.log(r1);
 
       let arr = JSON.parse(r1[0].memberFavoriteId);
       // console.log(arr);
       if (arr.indexOf(req.body.userId) !== -1) {
-        newarr = arr.filter(id=>id!==req.body.userId);
+        newarr = arr.filter((id) => id !== req.body.userId);
       }
       // console.log(arr)
       arr_string = JSON.stringify(newarr);
-      return db.queryAsync(addmbidtoitem, [arr_string, req.body.unlikeproductId]);
-    })
-})
+      return db.queryAsync(addmbidtoitem, [
+        arr_string,
+        req.body.unlikeproductId,
+      ]);
+    });
+});
 //抓COUPON圖片
 router.post("/getCoupon", (req, res) => {
   // console.log("req.body.sId", req.body.sId);
   const sql = "SELECT * FROM sales WHERE sId = ?";
-  db.queryAsync(sql, [req.body.sId]).then(r => {
+  db.queryAsync(sql, [req.body.sId]).then((r) => {
     res.json({ r });
   });
 });
@@ -404,8 +463,8 @@ let mailTransport = nodemailer.createTransport({
     // user:'albertkingdom@gmail.com',
     // pass:'xup6m4d93albert',
     secure: false,
-    requireTLS: true
-  }
+    requireTLS: true,
+  },
 });
 router.post("/confirmOrderEmail", (req, res) => {
   let name = "";
@@ -435,7 +494,7 @@ router.post("/confirmOrderEmail", (req, res) => {
                     
                     
                 </tr>
-               </table>`
+               </table>`,
   };
 
   mailTransport
@@ -445,11 +504,11 @@ router.post("/confirmOrderEmail", (req, res) => {
     // }else{
     //     console.log('Email Sent')
     // }
-    .then(function(response) {
+    .then(function (response) {
       // console.log("Email Sent");
       return;
     })
-    .catch(function(error) {
+    .catch(function (error) {
       // console.log("error", error);
     });
 });
@@ -457,7 +516,7 @@ router.post("/confirmOrderEmail", (req, res) => {
 //抓會員大頭照圖片
 router.post("/getmemberinfo", (req, res) => {
   const sql = "SELECT mbAva FROM mb_info WHERE mbId=?";
-  db.queryAsync(sql, [req.body.mbId]).then(r => {
+  db.queryAsync(sql, [req.body.mbId]).then((r) => {
     res.json({ r });
   });
 });
@@ -465,7 +524,7 @@ router.post("/getmemberinfo", (req, res) => {
 router.post("/findmycup", (req, res) => {
   const sql = "SELECT mbCup FROM mb_info WHERE mbId=?";
   db.queryAsync(sql, [req.body.mbId])
-    .then(r => {
+    .then((r) => {
       const oristring = r[0].mbCup;
       // console.log(oristring);
       const arr = oristring.split(",");
@@ -474,7 +533,7 @@ router.post("/findmycup", (req, res) => {
       const sql2 = `SELECT \* FROM \`sales\` WHERE \`sId\` IN (?)`;
       return db.queryAsync(sql2, [arr]);
     })
-    .then(r2 => {
+    .then((r2) => {
       return res.json(r2);
     });
 });
@@ -498,7 +557,7 @@ router.post("/insert", upload.none(), (req, res) => {
     error: "",
     status: 0,
     body: req.body,
-    result: {}
+    result: {},
   };
 
   // if(!req.body.name || req.body.name.length<2){
@@ -525,15 +584,15 @@ router.post("/insert", upload.none(), (req, res) => {
     req.body.price,
     req.body.grade,
     req.body.launchdate,
-    req.body.intro
+    req.body.intro,
   ])
-    .then(r => {
+    .then((r) => {
       output.result = r;
       output.success = true;
       // console.log("result", r);
       return res.json(output);
     })
-    .catch(error => {
+    .catch((error) => {
       // res.send(error);
       // console.log(error);
       return res.json(output);
@@ -544,7 +603,7 @@ router.post("/insert", upload.none(), (req, res) => {
 router.get("/edit/:itemId", (req, res) => {
   const sql = "SELECT * FROM `items` WHERE itemId=?";
   db.queryAsync(sql, [req.params.itemId])
-    .then(result => {
+    .then((result) => {
       // res.json(result)//看result輸出的樣子
       if (!result || !result.length) {
         res.redirect(req.baseUrl + "/list");
@@ -555,7 +614,7 @@ router.get("/edit/:itemId", (req, res) => {
         res.render("product-list/edit", { row: result[0] });
       }
     })
-    .catch(error => {
+    .catch((error) => {
       res.redirect(req.baseUrl + "/list"); //有錯誤就跳轉
     });
   // res.render('address-book/edit');
@@ -571,7 +630,7 @@ router.post("/edit/:itemId", upload.none(), (req, res) => {
     error: "",
     status: 0,
     body: req.body,
-    result: {}
+    result: {},
   };
 
   // if(!req.body.name || req.body.name.length<2){
@@ -599,15 +658,15 @@ router.post("/edit/:itemId", upload.none(), (req, res) => {
     req.body.grade,
     req.body.launchdate,
     req.body.intro,
-    req.params.itemId
+    req.params.itemId,
   ])
-    .then(r => {
+    .then((r) => {
       output.result = r;
       output.success = true;
       // console.log("result", r);
       return res.json(output);
     })
-    .catch(error => {
+    .catch((error) => {
       // res.send(error);
       // console.log(error);
       return res.json(output);
@@ -617,7 +676,7 @@ router.post("/edit/:itemId", upload.none(), (req, res) => {
 //刪除資料
 router.post("/del/:itemId", (req, res) => {
   const sql = "DELETE FROM `items` WHERE `itemId`=?";
-  db.queryAsync(sql, [req.params.itemId]).then(r => {
+  db.queryAsync(sql, [req.params.itemId]).then((r) => {
     // console.log(r);
     res.json(r);
   });
@@ -660,7 +719,7 @@ router.get("/cart", (req, res) => {
     // console.log(item);
     // req.session.shopping_item.forEach((item,idx)=>{
     //     // console.log(item);
-    db.queryAsync(sql, [item]).then(result => {
+    db.queryAsync(sql, [item]).then((result) => {
       // res.json(result);
       // row.push(result)
       // res.send(result);
@@ -701,7 +760,7 @@ router.post("/addToCheck", (req, res) => {
   //  res.send('addTocheck');
   const sql = "SELECT * FROM `items` WHERE itemId IN (?)";
   db.queryAsync(sql, [req.body.itemId])
-    .then(result => {
+    .then((result) => {
       // console.log(result);
       //  for(let k=0;k<result.length;k++){
       //  let itemId = result[0].itemId,price = result[0].itemPrice;
@@ -711,7 +770,7 @@ router.post("/addToCheck", (req, res) => {
       for (let i = 0; i < result.length; i++) {
         ordercontent[i] = {
           itemId: result[i].itemId,
-          price: result[i].itemPrice
+          price: result[i].itemPrice,
         };
       }
       //  ordercontent['itemId']=itemId;
@@ -720,7 +779,7 @@ router.post("/addToCheck", (req, res) => {
       const sqlOrder = "INSERT INTO `orders` (`username`) VALUES (?)";
       return db.queryAsync(sqlOrder, [req.session.loginUser]);
     })
-    .then(r => {
+    .then((r) => {
       // console.log("最新: " + r.insertId); //取得最新orders id
       // console.log(r.insertId)
       // let params = r.insertId;
@@ -732,7 +791,7 @@ router.post("/addToCheck", (req, res) => {
         db.queryAsync(item_sql, [
           r.insertId,
           ordercontent[j].itemId,
-          ordercontent[j].price
+          ordercontent[j].price,
         ]);
         // console.log(el.itemId)
         // console.log('hi')
@@ -742,7 +801,7 @@ router.post("/addToCheck", (req, res) => {
       // res.redirect(req.baseUrl + '/payment');
       // res.render('/product-list/payment',{payment:'1'});
     })
-    .then(r => {
+    .then((r) => {
       res.redirect(req.baseUrl + "/payment");
     });
 });
