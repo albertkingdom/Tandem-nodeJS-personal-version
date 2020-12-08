@@ -1,13 +1,13 @@
-### Tandem_nodeJS
+# [團隊作品]Tandem電商平台BackEnd
 
-Tandem 後端node使用公版 
+(目前這個repo只維護商品、結帳流程相關的部分)
 
-#主要對自己的router JS進行修改
-#請大家從這份出發，檢視自己目前現有react跑起來如何
+## 建立REST API for Tandem前端
 
+[Tandem前端github](https://github.com/albertkingdom/Tandem_merge_personal_version)
 
-----------------------------設定原則---------------------------
+## API for 商品頁面、結帳流程
 
-#sql資料庫名稱 tandem (全小寫)
-#node  固定port號======> 6001
+* 存、取Database的商品資料、訂單、留言、收藏清單
 
+* 結帳流程串接TapPAY金流
