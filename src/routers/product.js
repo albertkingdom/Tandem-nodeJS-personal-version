@@ -1,4 +1,5 @@
 const db = require(__dirname + "/../_connect_db");
+
 const moment = require("moment-timezone");
 const multer = require("multer");
 const upload = multer({ dest: "tmp_uploads/" }); //設定上傳暫存目錄
@@ -115,51 +116,54 @@ router.get("/list/:page?", (req, res) => {
     });
 });
 //篩選查詢商品資料for productlist
-router.get("/search/:type/:vendorId/:price/:orderBy/:page?", (req, res) => {
+// "/search/:type/:vendorId/:price/:orderBy/:page?"
+router.post("/search", (req, res) => {
   const perPage = 18; //每頁幾筆
   let totalRows, totalPages;
-  let page = req.params.page ? parseInt(req.params.page) : 1; //沒有設定頁數就第1頁
-  let type = req.params.type; //類別id
-  let vendor = req.params.vendorId;
-  let price = req.params.price;
-  let orderBy = req.params.orderBy;
 
-  type == 0 ? (type = "%%") : (type = req.params.type);
+  let { type, vendor, price, orderBy = "itemId", page = 1 } = req.body;
+
+  type == 0 ? (type = "%%") : type;
   // console.log("type=", type);
 
-  vendor == "V000" ? (vendor = "%%") : (vendor = req.params.vendorId); //IF沒有篩VENDOR(VENDOR='V000')就用模糊搜尋
-  // console.log("vendor=", vendor);
-  // console.log("price", price);
-  price == 9999 ? (price = 'LIKE "%%"') : (price = req.params.price); //IF沒有篩PRICE(PRICE='9999')就用模糊搜尋
+  vendor == "" ? (vendor = "%%") : vendor; //IF沒有篩VENDOR(VENDOR='')就用模糊搜尋
 
+  price == "" ? (price = 'LIKE "%%"') : price; //IF沒有篩PRICE(PRICE='')就用模糊搜尋
+  // console.log(
+  //   "type=",
+  //   type,
+  //   "vendor=",
+  //   vendor,
+  //   "price=",
+  //   price,
+  //   "page",
+  //   page,
+  //   "orderby",
+  //   orderBy
+  // );
   const t_sql = `SELECT COUNT(1) AS num FROM items WHERE itemCategoryId LIKE '${type}' AND itemDeveloperId LIKE '${vendor}' AND itemPrice ${price} ORDER BY ${orderBy}`;
-  // console.log("t_sql", t_sql);
+  // console.log(t_sql);
   db.queryAsync(t_sql)
     .then((result) => {
       totalRows = result[0].num; //總筆數
       totalPages = Math.ceil(totalRows / perPage);
 
       //限定page範圍
-      if (page < 1) page = 1;
+
       if (page > totalPages) page = totalPages;
+      if (page < 1) page = 1;
 
       const sql = `SELECT * FROM items WHERE itemCategoryId LIKE '${type}' AND itemDeveloperId LIKE'${vendor}' AND itemPrice ${price} ORDER BY ${orderBy} LIMIT ${
         (page - 1) * perPage
       },${perPage} `;
+
       return db.queryAsync(sql);
     })
     .then((result) => {
-      result.forEach((row, idx) => {
+      result.forEach((row) => {
         row.itemDate = moment(row.itemDate).format(dateFormat);
       });
-      // res.send(result)//check sql語法查詢到的結果
-      // res.render('product-list/list',{
-      //     totalRows,
-      //     totalPages,
-      //     page,
-      //     rows:result
-      // });
-      //api(輸出json格式)
+
       res.json({
         totalRows,
         totalPages,
@@ -167,7 +171,8 @@ router.get("/search/:type/:vendorId/:price/:orderBy/:page?", (req, res) => {
         page,
         rows: result,
       });
-    });
+    })
+    .catch((error) => console.log(error));
 });
 
 //取得商品下面的留言for commentlist
