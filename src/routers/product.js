@@ -121,7 +121,7 @@ router.post("/search", (req, res) => {
   const perPage = 18; //每頁幾筆
   let totalRows, totalPages;
 
-  let { type, vendor, price, orderBy = "itemId", page = 1 } = req.body;
+  let { type, vendor, price, orderBy, page = 1 } = req.body;
 
   type == 0 ? (type = "%%") : type;
   // console.log("type=", type);
@@ -129,6 +129,8 @@ router.post("/search", (req, res) => {
   vendor == "" ? (vendor = "%%") : vendor; //IF沒有篩VENDOR(VENDOR='')就用模糊搜尋
 
   price == "" ? (price = 'LIKE "%%"') : price; //IF沒有篩PRICE(PRICE='')就用模糊搜尋
+
+  orderBy = orderBy === "" ? "itemId" : orderBy;
   // console.log(
   //   "type=",
   //   type,
