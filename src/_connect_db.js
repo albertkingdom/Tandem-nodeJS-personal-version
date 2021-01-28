@@ -2,15 +2,13 @@ const mysql = require("mysql");
 const bluebird = require("bluebird");
 
 const db = mysql.createConnection({
-  host: "localhost",
-  user: "root",
-  password: "",
-  database: "tandem",
-
-  // for MAC PC USE
-  // socketPath: "/Applications/XAMPP/xamppfiles/var/mysql/mysql.sock"
+  user: "albert",
+  password: "albert",
+  host: process.env.MYSQL_HOST,
+  database: process.env.MYSQL_DATABASE || "tandem_docker",
+  port: 3306,
 });
-db.on("error", event => {
+db.on("error", (event) => {
   console.log(event);
 });
 db.connect();

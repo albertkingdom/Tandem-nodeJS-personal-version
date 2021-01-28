@@ -1,0 +1,43 @@
+version: "3.8"
+
+services:
+  tandem-nodejs-api:
+    container_name: backend
+    build: ./
+    environment:
+      MYSQL_USER: albert
+      MYSQL_PASSWORD: albert
+      MYSQL_DATABASE: tandem_docker
+      MYSQL_HOST: mysql
+    command: npm start
+    depends_on:
+      - mysql
+    # links:
+    #   - mysql
+    ports:
+      - "6001:6001"
+
+  # mysql
+  mysql:
+    container_name: mysqldatabase
+    image: mysql
+    command: --default-authentication-plugin=mysql_native_password
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_USER: albert
+      MYSQL_PASSWORD: albert
+      MYSQL_ROOT_PASSWORD: secret
+      MYSQL_DATABASE: tandem_docker
+    volumes:
+      - ./mysql-dump:/docker-entrypoint-initdb.d
+  # PHPMYADMIN
+  phpmyadmin:
+    container_name: phpadmin_container
+    image: phpmyadmin/phpmyadmin
+    ports:
+      - "8080:80"
+    environment:
+      PMA_HOST: mysql
+      PMA_PORT: 3306
+      UPLOAD_LIMIT: 300M
