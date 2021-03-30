@@ -295,17 +295,26 @@ router.post("/payment/", (req, res) => {
   let orderId = "order_" + new Date().getTime(); //產生orderId
   let totalPrice;
   const itemIds = JSON.parse(req.body.itemIds);
+
+  const { mbId, discount } = req.body;
+
   db.queryAsync(sqlPrice, [itemIds])
     .then((result) => {
       // console.log("查詢商品價格", result);
       totalPrice = result.reduce((total, item) => (total += item.itemPrice), 0);
+      // calculate discount
+      if (discount.includes("%")) {
+        totalPrice = (totalPrice * parseFloat(discount)) / 100;
+      } else {
+        totalPrice = totalPrice - discount;
+      }
       console.log("total price", totalPrice);
 
       return db.queryAsync(sqlOrder, [
-        req.body.itemIds,
+        JSON.stringify(itemIds),
         orderId,
         totalPrice,
-        req.body.mbId,
+        mbId,
       ]);
     })
     .then((result) => {
